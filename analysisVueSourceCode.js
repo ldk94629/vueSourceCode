@@ -310,8 +310,8 @@ window.Vuw=factory();
       return l
         ? l > 1
           ? fn.apply(ctx, arguments)
-          : fn.call(ctx, a)
         : fn.call(ctx)
+          : fn.call(ctx, a)
     }
 
     boundFn._length = fn.length;
