@@ -152,7 +152,7 @@ window.Vuw=factory();
   }
 
 /**
- * 113-----201行代码-------------------------
+ * 113-----195行代码-------------------------
  */
 
 /**
@@ -293,4 +293,155 @@ window.Vuw=factory();
     return str.replace(hyphenateRE, '-$1').toLowerCase()
   });
 
- 
+/********195-329 */ 
+
+  /**
+   * Simple bind polyfill for environments that do not support it,
+   * e.g., PhantomJS 1.x. Technically, we don't need this anymore
+   * since native bind is now performant enough in most browsers.
+   * But removing it would mean breaking code that was able to run in
+   * PhantomJS 1.x, so this must be kept for backward compatibility.
+   */
+
+  /* istanbul ignore next */
+  function polyfillBind (fn, ctx) {
+    function boundFn (a) {
+      var l = arguments.length;
+      return l
+        ? l > 1
+          ? fn.apply(ctx, arguments)
+          : fn.call(ctx, a)
+        : fn.call(ctx)
+    }
+
+    boundFn._length = fn.length;
+    return boundFn
+  }
+  /**原生的bind */
+  function nativeBind (fn, ctx) {
+    return fn.bind(ctx)
+  }
+
+  var bind = Function.prototype.bind
+    ? nativeBind
+    : polyfillBind;
+
+  /**
+   * Convert an Array-like object to a real Array.
+   * 将像数组的转化为真数组;
+   * @params {Array-like} list;
+   * @params {String,Number} start开始转换的位置;
+   */
+  function toArray (list, start) {
+    start = start || 0;
+    var i = list.length - start;
+    var ret = new Array(i);
+    while (i--) {
+      ret[i] = list[i + start];
+    }
+    return ret
+  }
+
+  /**
+   * Mix properties into target object.
+   * 将多个属性插入目标对象;
+   * from->to;
+   */
+  function extend (to, _from) {
+    for (var key in _from) {
+      to[key] = _from[key];
+    }
+    return to
+  }
+
+  /**
+   * Merge an Array of Objects into a single Object.
+   * 将对象数组转换位单个对象
+   * @params {Array} arr   var arr=['111111111']其中[1,1,1,1,1,1,1,1,1]和['111111111']不生效;
+   * return {Object}
+   */
+  function toObject (arr) {
+    var res = {};
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i]) {
+        extend(res, arr[i]);
+      }
+    }
+    return res
+  }
+  
+
+  /* eslint-disable no-unused-vars */
+
+  /**
+   * Perform no operation.
+   * Stubbing args to make Flow happy without leaving useless transpiled code
+   * with ...rest (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+   */
+  function noop (a, b, c) {}
+
+  /**
+   * Always return false.
+   * 为假
+   */
+  var no = function (a, b, c) { return false; };
+
+  /* eslint-enable no-unused-vars */
+
+  /**
+   * Return the same value.
+   * 返回自身
+   */
+  var identity = function (_) { return _; };
+
+  /**
+   * Generate a string containing static keys from compiler modules.
+   * 从编译器模块生成包含静态键的字符串
+   */
+  function genStaticKeys (modules) {
+    return modules.reduce(function (keys, m) {
+      return keys.concat(m.staticKeys || [])
+    }, []).join(',')
+  }
+
+  /**
+   * Check if two values are loosely equal - that is,
+   * if they are plain objects, do they have the same shape?
+   * 判断对象的浅相等;
+   * 
+   */
+  function looseEqual (a, b) {
+    if (a === b) { return true }
+    var isObjectA = isObject(a);
+    var isObjectB = isObject(b);
+    if (isObjectA && isObjectB) {
+      try {
+        var isArrayA = Array.isArray(a);
+        var isArrayB = Array.isArray(b);
+        if (isArrayA && isArrayB) {
+          return a.length === b.length && a.every(function (e, i) {
+            return looseEqual(e, b[i])
+          })
+        } else if (a instanceof Date && b instanceof Date) {
+          return a.getTime() === b.getTime()
+        } else if (!isArrayA && !isArrayB) {
+          var keysA = Object.keys(a);
+          var keysB = Object.keys(b);
+          return keysA.length === keysB.length && keysA.every(function (key) {
+            return looseEqual(a[key], b[key])
+          })
+        } else {
+          /* istanbul ignore next */
+          return false
+        }
+      } catch (e) {
+        /* istanbul ignore next */
+        return false
+      }
+    } else if (!isObjectA && !isObjectB) {
+      return String(a) === String(b)
+    } else {
+      return false
+    }
+  }
+
